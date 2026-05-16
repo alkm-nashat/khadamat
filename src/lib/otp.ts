@@ -5,29 +5,32 @@ export function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-/** إرسال OTP — في dev يطبع في console، في prod يرسل SMS */
-export async function sendOTP(phone: string, code: string): Promise<void> {
-  if (process.env.NODE_ENV === "development") {
-    console.log("\n╔══════════════════════════════════╗");
-    console.log(`║  📱 OTP للجوال: ${phone}`);
-    console.log(`║  🔐 الرمز: ${code}`);
-    console.log("╚══════════════════════════════════╝\n");
-    return;
-  }
-
-  // في الإنتاج: أرسل عبر Twilio
+/** إرسال OTP — يُعيد الرمز إذا لم يكن Twilio مُعدَّلاً (وضع Demo) */
+export async function sendOTP(
+  phone: string,
+  code: string
+): Promise<{ devCode?: string }> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken  = process.env.TWILIO_AUTH_TOKEN;
   const fromPhone  = process.env.TWILIO_PHONE_NUMBER;
 
-  if (!accountSid || !authToken || !fromPhone ||
-      accountSid === "dev_placeholder") {
-    console.warn("⚠️  Twilio غير مُعدَّل — OTP:", code);
-    return;
+  const twilioReady =
+    accountSid && authToken && fromPhone &&
+    accountSid !== "dev_placeholder";
+
+  // وضع التطوير أو Demo (بدون Twilio)
+  if (!twilioReady) {
+    console.log(`\n📱 [DEMO OTP] ${phone} → ${code}\n`);
+    return { devCode: code }; // يُرجع الرمز ليُعرض في الواجهة
   }
 
+  // وضع الإنتاج الحقيقي — Twilio
   const body    = `رمز التحقق لـ شيّال: ${code}\nصالح لمدة 5 دقائق`;
-  const encoded = new URLSearchParams({ To: `+966${phone.slice(1)}`, From: fromPhone, Body: body });
+  const encoded = new URLSearchParams({
+    To: `+966${phone.slice(1)}`,
+    From: fromPhone,
+    Body: body,
+  });
 
   const res = await fetch(
     `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
@@ -45,6 +48,8 @@ export async function sendOTP(phone: string, code: string): Promise<void> {
     const err = await res.json();
     throw new Error(`Twilio error: ${err.message}`);
   }
+
+  return {};
 }
 
 /** حفظ OTP في قاعدة البيانات (يحذف القديم أولاً) */

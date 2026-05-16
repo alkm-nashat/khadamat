@@ -44,12 +44,14 @@ export async function POST(req: NextRequest) {
     // توليد وحفظ وإرسال OTP
     const code = generateOTP();
     await saveOTP(phone, code);
-    await sendOTP(phone, code);
+    const { devCode } = await sendOTP(phone, code);
 
     return NextResponse.json({
       success: true,
       isNewUser: !existingUser,
       message: "تم إرسال رمز التحقق",
+      // يُرسل الرمز في الاستجابة فقط عندما لا يكون Twilio مُعدَّلاً (وضع Demo)
+      ...(devCode ? { devCode } : {}),
     });
   } catch (err) {
     console.error("send-otp error:", err);

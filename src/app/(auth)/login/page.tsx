@@ -89,6 +89,7 @@ function LoginForm() {
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState("");
   const [countdown, setCountdown] = useState(0);
+  const [devCode,   setDevCode]   = useState(""); // للعرض التجريبي فقط
 
   // عداد إعادة الإرسال
   useEffect(() => {
@@ -116,6 +117,11 @@ function LoginForm() {
       setIsNew(data.isNewUser);
       setStage("otp");
       setCountdown(60);
+      // وضع Demo: عرض الرمز مباشرة وملء الخانات تلقائياً
+      if (data.devCode) {
+        setDevCode(data.devCode);
+        setOtp(data.devCode);
+      }
     } finally {
       setLoading(false);
     }
@@ -227,12 +233,28 @@ function LoginForm() {
             <div className="text-center text-sm text-gray-500">
               أُرسل رمز التحقق إلى{" "}
               <span className="font-bold text-gray-800" dir="ltr">{phone}</span>
-              {process.env.NODE_ENV === "development" && (
-                <span className="block mt-1 text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-                  🛠️ وضع التطوير: ابحث عن الرمز في console السيرفر
-                </span>
-              )}
             </div>
+
+            {/* بطاقة Demo OTP — تظهر فقط عندما لا يكون Twilio مُعدَّلاً */}
+            {devCode && (
+              <div
+                className="flex items-center justify-between rounded-xl px-4 py-3 border-2"
+                style={{ backgroundColor: "#FFFBEB", borderColor: "#F59E0B" }}
+              >
+                <div className="text-right">
+                  <p className="text-xs font-semibold" style={{ color: "#92400E" }}>
+                    🎯 وضع العرض التجريبي
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">رمز التحقق الخاص بك:</p>
+                </div>
+                <div
+                  className="text-2xl font-black tracking-widest"
+                  style={{ color: "#1E3A5F", direction: "ltr" }}
+                >
+                  {devCode}
+                </div>
+              </div>
+            )}
 
             {/* حقل الاسم للمستخدمين الجدد */}
             {isNew && (
@@ -284,7 +306,7 @@ function LoginForm() {
                 </span>
               ) : (
                 <button
-                  onClick={() => { setOtp(""); sendOtp(); }}
+                  onClick={() => { setOtp(""); setDevCode(""); sendOtp(); }}
                   className="text-sm font-semibold"
                   style={{ color: "#1E3A5F" }}
                 >
