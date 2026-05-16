@@ -38,6 +38,5 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
     error:  "/login",
   },
-
-  secret: process.env.NEXTAUTH_SECRET,
+  // secret is auto-read from AUTH_SECRET / NEXTAUTH_SECRET env vars
 };
