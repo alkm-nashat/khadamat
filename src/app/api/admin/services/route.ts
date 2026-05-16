@@ -2,6 +2,71 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
 
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
+  if (!isAdmin) return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
+
+  try {
+    const body = await req.json() as {
+      title: string;
+      description: string;
+      categoryId: string;
+      providerId: string;
+      regionId: string;
+      cityId: string;
+      deliveryTime?: string;
+      tags?: string[];
+      images?: string[];
+    };
+
+    const { title, description, categoryId, providerId, regionId, cityId, deliveryTime, tags, images } = body;
+
+    if (!title || !description || !categoryId || !providerId || !regionId || !cityId) {
+      return NextResponse.json({ error: "جميع الحقول الأساسية مطلوبة" }, { status: 400 });
+    }
+
+    const service = await prisma.service.create({
+      data: {
+        title,
+        description,
+        categoryId,
+        providerId,
+        regionId,
+        cityId,
+        deliveryTime: deliveryTime || null,
+        tags: tags?.length ? JSON.stringify(tags) : "[]",
+        status: "ACTIVE",
+        images: images?.length
+          ? {
+              create: images
+                .filter(Boolean)
+                .map((url, idx) => ({
+                  url,
+                  publicId: `admin_upload_${Date.now()}_${idx}`,
+                  width: 800,
+                  height: 600,
+                  sizeKb: 0,
+                  order: idx,
+                })),
+            }
+          : undefined,
+      },
+      include: {
+        category: { select: { name: true, icon: true } },
+        provider: { select: { name: true, username: true } },
+        city:     { select: { name: true } },
+        images:   true,
+      },
+    });
+
+    return NextResponse.json(service, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/admin/services:", err);
+    return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
+  }
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";

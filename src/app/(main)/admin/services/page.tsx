@@ -57,9 +57,19 @@ export default async function AdminServicesPage({ searchParams }: Props) {
   return (
     <div className="space-y-5">
       {/* Title */}
-      <div>
-        <h1 className="text-2xl font-black text-[#1E3A5F]">📦 إدارة الخدمات</h1>
-        <p className="text-gray-500 text-sm mt-1">{total} خدمة</p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black text-[#1E3A5F]">📦 إدارة الخدمات</h1>
+          <p className="text-gray-500 text-sm mt-1">{total} خدمة</p>
+        </div>
+        <Link
+          href="/admin/services/new"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm hover:opacity-90 transition flex-shrink-0"
+          style={{ backgroundColor: "#1E3A5F" }}
+        >
+          <span className="text-lg leading-none">+</span>
+          إضافة خدمة جديدة
+        </Link>
       </div>
 
       {/* Filters */}

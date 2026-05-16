@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import AdminCategoryActions from "./AdminCategoryActions";
+import NewCategoryForm from "./NewCategoryForm";
 
 export const metadata = { title: "إدارة التصنيفات" };
 
@@ -11,9 +12,12 @@ export default async function AdminCategoriesPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-black text-[#1E3A5F]">🏷️ إدارة التصنيفات</h1>
-        <p className="text-gray-500 text-sm mt-1">{categories.length} تصنيف</p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black text-[#1E3A5F]">🏷️ إدارة التصنيفات</h1>
+          <p className="text-gray-500 text-sm mt-1">{categories.length} تصنيف</p>
+        </div>
+        <NewCategoryForm />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

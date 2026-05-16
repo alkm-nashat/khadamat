@@ -1,12 +1,12 @@
 // منصة الخدمات - Prisma Schema
-// قاعدة بيانات SQLite للتطوير
+// قاعدة بيانات PostgreSQL (Neon)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
