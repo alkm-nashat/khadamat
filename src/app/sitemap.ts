@@ -27,32 +27,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // ── التصنيفات ─────────────────────────────────────────────────
-  const categories = await prisma.serviceCategory.findMany({
-    where: { isActive: true },
-    select: { slug: true, updatedAt: true },
-  });
+  let categoryPages: MetadataRoute.Sitemap = [];
+  let servicePages: MetadataRoute.Sitemap = [];
 
-  const categoryPages: MetadataRoute.Sitemap = categories.map((cat) => ({
-    url: `${BASE_URL}/categories/${cat.slug}`,
-    lastModified: cat.updatedAt,
-    changeFrequency: "daily" as const,
-    priority: 0.7,
-  }));
+  try {
+    const categories = await prisma.serviceCategory.findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true },
+    });
+    categoryPages = categories.map((cat) => ({
+      url: `${BASE_URL}/categories/${cat.slug}`,
+      lastModified: cat.updatedAt,
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    }));
 
-  // ── الخدمات النشطة ────────────────────────────────────────────
-  const services = await prisma.service.findMany({
-    where: { status: "ACTIVE" },
-    select: { id: true, updatedAt: true },
-    orderBy: { updatedAt: "desc" },
-    take: 1000, // حد أقصى للخريطة
-  });
-
-  const servicePages: MetadataRoute.Sitemap = services.map((s) => ({
-    url: `${BASE_URL}/services/${s.id}`,
-    lastModified: s.updatedAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
+    const services = await prisma.service.findMany({
+      where: { status: "ACTIVE" },
+      select: { id: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+      take: 1000,
+    });
+    servicePages = services.map((s) => ({
+      url: `${BASE_URL}/services/${s.id}`,
+      lastModified: s.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // DB not available at build time
+  }
 
   return [...staticPages, ...categoryPages, ...servicePages];
 }
