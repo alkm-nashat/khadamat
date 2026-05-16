@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/db";
 import { verifyOTP } from "@/lib/otp";
+import { authConfig } from "@/lib/auth.config";
 
 declare module "next-auth" {
   interface Session {
@@ -25,6 +26,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       id: "otp",
@@ -83,40 +85,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-  session: { strategy: "jwt" },
-
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const u = user as any;
-        token["id"]       = u.id;
-        token["phone"]    = u.phone;
-        token["username"] = u.username;
-        token["role"]     = u.role;
-        token["avatar"]   = u.avatar ?? null;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const t = token as any;
-      session.user.id       = t["id"]       ?? "";
-      session.user.phone    = t["phone"]    ?? "";
-      session.user.username = t["username"] ?? "";
-      session.user.role     = t["role"]     ?? "USER";
-      session.user.avatar   = t["avatar"]   ?? null;
-      return session;
-    },
-  },
-
-  pages: {
-    signIn: "/login",
-    error:  "/login",
-  },
-
-  secret: process.env.NEXTAUTH_SECRET,
 });
 
 /** مساعد: الحصول على الجلسة الحالية في Server Components */

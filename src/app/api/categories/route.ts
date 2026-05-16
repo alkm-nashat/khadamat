@@ -21,7 +21,8 @@ export async function GET() {
         serviceCount: c._count.services,
       }))
     );
-  } catch {
+  } catch (err) {
+    console.error("GET /api/categories error:", err);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }
