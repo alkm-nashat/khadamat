@@ -1,0 +1,246 @@
+// منصة الخدمات - Prisma Schema
+// قاعدة بيانات SQLite للتطوير
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================
+// المستخدمون والمصادقة
+// ============================
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  username     String   @unique
+  phone        String   @unique
+  email        String?  @unique
+  avatar       String?
+  bio          String?
+  city         String?
+  role         String   @default("USER")        // USER | MODERATOR | ADMIN
+  isVerified   Boolean  @default(false)
+  isBlocked    Boolean  @default(false)
+  rating       Float    @default(0)
+  totalRatings Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  services         Service[]  @relation("ProviderServices")
+  bookingsAsClient Booking[]  @relation("ClientBookings")
+  ratingsGiven     Rating[]   @relation("RaterRatings")
+  ratingsReceived  Rating[]   @relation("ProviderRatings")
+  sentMessages     Message[]  @relation("SentMessages")
+  receivedMessages Message[]  @relation("ReceivedMessages")
+  reports          Report[]   @relation("ReporterReports")
+  favoriteServices Service[]  @relation("FavoriteServices")
+
+  @@map("users")
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // لا علاقة بـ User — رمز OTP يُرسل قبل إنشاء الحساب
+  @@index([phone])
+  @@map("otp_codes")
+}
+
+// ============================
+// إعدادات المنصة
+// ============================
+
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// ============================
+// التصنيفات والمناطق
+// ============================
+
+model ServiceCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  icon      String
+  color     String
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services Service[]
+
+  @@map("service_categories")
+}
+
+model Region {
+  id       String   @id @default(cuid())
+  name     String
+  slug     String   @unique
+  isActive Boolean  @default(true)
+  order    Int      @default(0)
+
+  cities   City[]
+  services Service[]
+
+  @@map("regions")
+}
+
+model City {
+  id       String  @id @default(cuid())
+  name     String
+  slug     String  @unique
+  isActive Boolean @default(true)
+  regionId String
+
+  region   Region    @relation(fields: [regionId], references: [id])
+  services Service[]
+
+  @@map("cities")
+}
+
+// ============================
+// الخدمات والصور
+// ============================
+
+model Service {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  suggestedNote String?
+  status        String   @default("ACTIVE") // ACTIVE | HIDDEN | SUSPENDED
+  views         Int      @default(0)
+  deliveryTime  String?
+  tags          String   @default("[]")     // JSON array as string
+  categoryId    String
+  providerId    String
+  regionId      String
+  cityId        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category    ServiceCategory @relation(fields: [categoryId], references: [id])
+  provider    User            @relation("ProviderServices", fields: [providerId], references: [id])
+  region      Region          @relation(fields: [regionId], references: [id])
+  city        City            @relation(fields: [cityId], references: [id])
+  images      ServiceImage[]
+  bookings    Booking[]
+  ratings     Rating[]
+  favoritedBy User[]          @relation("FavoriteServices")
+  reports     Report[]
+  messages    Message[]       @relation("ServiceMessages")
+
+  @@map("services")
+}
+
+model ServiceImage {
+  id        String @id @default(cuid())
+  url       String
+  publicId  String
+  width     Int
+  height    Int
+  sizeKb    Int
+  order     Int    @default(0)
+  serviceId String
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("service_images")
+}
+
+// ============================
+// الحجوزات
+// ============================
+
+model Booking {
+  id            String   @id @default(cuid())
+  status        String   @default("PENDING") // PENDING | CONFIRMED | COMPLETED | CANCELLED
+  notes         String?
+  serviceFee    Float    @default(10)
+  paymentStatus String   @default("PENDING") // PENDING | PAID
+  paymentRef    String?
+  canRate       Boolean  @default(false)
+  serviceId     String
+  clientId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  service Service @relation(fields: [serviceId], references: [id])
+  client  User    @relation("ClientBookings", fields: [clientId], references: [id])
+  rating  Rating?
+
+  @@map("bookings")
+}
+
+// ============================
+// التقييمات
+// ============================
+
+model Rating {
+  id         String   @id @default(cuid())
+  score      Int
+  comment    String?
+  bookingId  String   @unique
+  raterId    String
+  providerId String
+  serviceId  String
+  createdAt  DateTime @default(now())
+
+  booking  Booking @relation(fields: [bookingId], references: [id])
+  rater    User    @relation("RaterRatings", fields: [raterId], references: [id])
+  provider User    @relation("ProviderRatings", fields: [providerId], references: [id])
+  service  Service @relation(fields: [serviceId], references: [id])
+
+  @@map("ratings")
+}
+
+// ============================
+// الرسائل والبلاغات
+// ============================
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  isRead     Boolean  @default(false)
+  senderId   String
+  receiverId String
+  serviceId  String?
+  createdAt  DateTime @default(now())
+
+  sender   User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  service  Service? @relation("ServiceMessages", fields: [serviceId], references: [id])
+
+  @@map("messages")
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reason      String
+  description String?
+  status      String   @default("PENDING") // PENDING | REVIEWED | RESOLVED
+  reporterId  String
+  serviceId   String
+  createdAt   DateTime @default(now())
+
+  reporter User    @relation("ReporterReports", fields: [reporterId], references: [id])
+  service  Service @relation(fields: [serviceId], references: [id])
+
+  @@map("reports")
+}

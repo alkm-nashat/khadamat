@@ -1,0 +1,101 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap");
+@import "tailwindcss";
+
+@theme inline {
+  /* الألوان الأساسية للمنصة */
+  --color-primary: #1E3A5F;
+  --color-primary-light: #2d5485;
+  --color-primary-dark: #142840;
+
+  --color-gold: #C9A84C;
+  --color-gold-light: #d4b76a;
+  --color-gold-dark: #a8872e;
+
+  --color-background: #F8F6F1;
+  --color-surface: #ffffff;
+  --color-border: #e5e0d8;
+
+  --color-success: #10B981;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-info: #0EA5E9;
+
+  /* ألوان التصنيفات */
+  --color-cat-consultations: #6366F1;
+  --color-cat-real-estate: #0EA5E9;
+  --color-cat-travel: #F59E0B;
+  --color-cat-catering: #EF4444;
+  --color-cat-wellness: #EC4899;
+  --color-cat-education: #10B981;
+
+  /* الخط الأساسي */
+  --font-sans: "Cairo", Arial, sans-serif;
+
+  /* الظلال */
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* إعدادات الوضع الداكن */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0f172a;
+    --color-surface: #1e293b;
+    --color-border: #334155;
+  }
+}
+
+/* الإعدادات الأساسية */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+  font-family: "Cairo", Arial, sans-serif;
+}
+
+body {
+  background-color: var(--color-background);
+  color: #1e293b;
+  font-family: "Cairo", Arial, sans-serif;
+  line-height: 1.6;
+}
+
+/* تخصيص شريط التمرير */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* حركات انتقالية سلسة */
+a,
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* تحسين مدخلات النماذج */
+input,
+textarea,
+select {
+  font-family: "Cairo", Arial, sans-serif;
+}
+
+/* إخفاء السهام من حقول الأرقام */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
